@@ -3,18 +3,21 @@ using System.Threading;
 
 namespace FileSearchEngine
 {
-    public class ShutdownHandler
+    public static class ShutdownHandler
     {
         private static readonly AutoResetEvent _exitEvent = new (false);
 
         public static void StartWatching()
         {
-            Console.CancelKeyPress += (_, ea) =>
-            {
-                Utils.Print("Завершение работы приложения...");
-                _exitEvent.Set();
-            };
+            Console.CancelKeyPress += OnExit;
+            AppDomain.CurrentDomain.ProcessExit += OnExit;
             _exitEvent.WaitOne();
+        }
+
+        private static void OnExit(object? sender, EventArgs e)
+        {
+            Utils.Log("Завершение работы приложения...");
+            _exitEvent.Set();
         }
     }
 }

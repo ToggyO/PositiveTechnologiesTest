@@ -9,27 +9,22 @@ using FileSearchEngine.Models;
 
 namespace FileSearchEngine.Parser
 {
-    public class FileParser
+    public static class FileParser
     {
-        public async Task<User> ParseJson(SearchResult result)
+        public static async Task<User> ParseJson(SearchResult result)
         {
-            FileStream readStream = null;
             try
             {
-                readStream = new FileStream(result.FullPath, FileMode.Open, FileAccess.Read);
+                await using var readStream = new FileStream(result.FullPath, FileMode.Open, FileAccess.Read);
                 return await JsonSerializer.DeserializeAsync<User>(readStream);
             }
-            catch
+            catch (Exception e)
             {
                 return default;
             }
-            finally
-            {
-                readStream?.Dispose();
-            }
         }
         
-        public async Task<Soft> ParseXml(SearchResult result)
+        public static async Task<Soft> ParseXml(SearchResult result)
         {
             try
             {
@@ -37,7 +32,7 @@ namespace FileSearchEngine.Parser
                 var serializer = new XmlSerializer(typeof(Soft));
                 return (Soft) await Task.FromResult(serializer.Deserialize(readStream));
             }
-            catch
+            catch (Exception e)
             {
                 return default;
             }

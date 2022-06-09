@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Threading;
 using System.Threading.Tasks;
 
 using FileSearchEngine.Engine;
-using FileSearchEngine.Parser;
 using FileSearchEngine.Storage;
 using FileSearchEngine.Validation;
 
@@ -21,65 +18,74 @@ namespace FileSearchEngine
 
         static async Task Do()
         {
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("ru_RU");
-
-            var files = new List<SearchResult>();
+            var searchResults = new List<SearchResult>();
             var engine = new SearchEngine();
-            var storage = new MemoryStorage(new FileParser());
+            var storage = new MemoryStorage();
 
+            string path;
+            ConsoleKey usersInput;
+            ConsoleKey softInput;
+            
             while (true)
             {
                 Console.Clear();
-                Utils.Print("Введите путь для поиска:");
-                // TODO: uncomment
-                // string path = Console.ReadLine();
-                string path = "/home/oleg-togushakov/Projects/back/TEST/FileSearchEngine/Test";
 
-                ConsoleKey usersInput = default;
-                while (!Validator.ValidateSearchOption(usersInput))
-                {
-                    Utils.Print("Ищем пользователей? (да, нет):");
-                    Console.WriteLine("1. Да");
-                    Console.WriteLine("2. Нет");
-                    usersInput = Console.ReadKey(true).Key;
-                }
+                Utils.Log("Введите путь для поиска:");
+                path = Console.ReadLine();
 
-                ConsoleKey softInput = default;
-                while (!Validator.ValidateSearchOption(softInput))
-                {
-                    Utils.Print("Ищем продукты? (да, нет):");
-                    Console.WriteLine("1. Да");
-                    Console.WriteLine("2. Нет");
-                    softInput = Console.ReadKey(true).Key;
-                }
-
+                GetInputOption(out usersInput,
+                    "Ищем пользователей? (Нажмите соотвествующую пункту клавишу):");
+                
+                GetInputOption(out softInput,
+                    "Ищем продукты? (Нажмите соотвествующую пункту клавишу):");
+                
                 engine.SetValidExtensions(
                     SearchEngineHelper.CreateValidExtensions(
                         Validator.ApplySearchOption(usersInput), Validator.ApplySearchOption(softInput)));
 
                 try
                 {
-                    Utils.Print("Поиск...");
+                    Utils.Log("Поиск...");
                     
-                    engine.ScanDirectoryForFiles(path, files);
-                    Utils.Print("Поиск закончен");
+                    engine.ScanDirectoryForFiles(path, searchResults);
+                    Utils.Log("Поиск закончен");
 
-                    await storage.Fill(files);
-                    files.Clear();
+                    await storage.Fill(searchResults);
+                    searchResults.Clear();
 
                     Console.Clear();
-                    storage.PrintResults();
 
+                    storage.PrintResults();
                     await storage.Clear();
 
-                    Utils.Print("Нажмите любую клавишу для продолжения");
-                    Console.ReadKey();
+                    path = default;
+                    usersInput = default;
+                    softInput = default;
                 }
                 catch (Exception e)
                 {
-                    Utils.Print("Указан неверный путь. Попробуйте еще раз!");
-                    Thread.Sleep(2000);
+                    Console.Clear();
+                    Utils.Log("Указан неверный путь. Попробуйте еще раз!");
                 }
+
+
+                GetInputOption(out ConsoleKey continuationOptionInput, "Продолжим поиск?");
+                if (!Validator.ApplySearchOption(continuationOptionInput))
+                    break;
+            }
+
+            Environment.Exit(0);
+        }
+
+        static void GetInputOption(out ConsoleKey input, string message)
+        {
+            input = default;
+            while (!Validator.ValidateSearchOption(input))
+            {
+                Utils.Log(message);
+                Utils.PrintWithPad("1. Да");
+                Utils.PrintWithPad("2. Нет");
+                input = Console.ReadKey(true).Key;
             }
         }
     }

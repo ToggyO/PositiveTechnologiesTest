@@ -4,7 +4,7 @@ namespace FileSearchEngine.Validation
 {
     public static class Validator
     {
-        public static bool ValidateSearchOption(ConsoleKey input)
+        public static bool ValidateSearchOption(ConsoleKey? input)
         {
             switch (input)
             {

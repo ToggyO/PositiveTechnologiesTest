@@ -11,7 +11,7 @@ namespace FileSearchEngine.Printer
             int index = 1;
             foreach (var s in source)
             {
-                Console.WriteLine($"  {index}: {s}");
+                Utils.PrintWithPad($"{index}: {s}");
                 index++;
             }
         }
